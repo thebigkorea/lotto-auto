@@ -53,6 +53,7 @@ select{width:100%;padding:15px;border-radius:14px;border:1px solid #ddd;font-siz
     <h1>로또 자동번호 추출기</h1>
     <p class="desc">최신 당첨번호와 과거 회차 데이터를 분석해<br>선택한 방식으로 번호를 추천합니다.</p>
 
+    <div id="recentBox" class="stats" style="display:none;"></div>
     <div id="latestBox" class="latest">최신 당첨번호를 불러오는 중입니다...</div>
     <div id="recentBox" class="recent-box" style="display:none;"></div>
 
@@ -70,6 +71,7 @@ select{width:100%;padding:15px;border-radius:14px;border:1px solid #ddd;font-siz
       <option value="cold">과거 적게 나온 번호 중심</option>
       <option value="recentCold">최근 10회 미출현 번호 중심</option>
       <option value="mixed" selected>혼합 추천</option>
+      <option value="recentCold">최근 10회 미출현 번호 중심</option>
     </select>
 
     <button class="btn primary" onclick="generateLotto()">로또번호 추출</button>
@@ -108,6 +110,62 @@ async function fetchRound(round){
   }catch(e){
     return null;
   }
+}
+
+async function findLatestRound(){
+  let round = 1;
+  let latest = null;
+
+  while(true){
+    const item = await fetchRound(round);
+
+    if(!item) break;
+
+    latest = item;
+    round++;
+
+    if(round > 1300) break;
+  }
+
+  return latest;
+}
+
+function ballHtml(num){
+  return `<div class="ball ${getColor(num)}">${num}</div>`;
+}
+
+async function showLatest(){
+  const latestBox = document.getElementById("latestBox");
+  const recentBox = document.getElementById("recentBox");
+
+  const latest = await findLatestRound();
+
+  if(!latest){
+    latestBox.innerHTML = "최신 당첨번호를 불러오지 못했습니다.";
+    return;
+  }
+
+  latestBox.innerHTML = `
+    <b>최신 당첨번호 ${latest.round}회</b><br>
+    <div class="balls" style="margin-top:10px;">
+      ${latest.numbers.map(n => ballHtml(n)).join("")}
+    </div>
+    <div style="margin-top:8px;">보너스 번호: ${latest.bonus}</div>
+  `;
+
+  const recent = [];
+
+  for(let r = latest.round; r > latest.round - 5; r--){
+    const item = await fetchRound(r);
+    if(item) recent.push(item);
+  }
+
+  recentBox.style.display = "block";
+  recentBox.innerHTML =
+    "<b>최근 5회 당첨번호</b><br>" +
+    recent.map(item =>
+      `${item.round}회: ${item.numbers.join(", ")} / 보너스 ${item.bonus}`
+    ).join("<br>");
 }
 
 async function findLatestRound(){
@@ -246,6 +304,24 @@ function pickNumbersByMode(mode){
     pool.sort((a,b)=>a.count-b.count);
     pool = pool.slice(0,22);
   }
+
+  if(mode === "recentCold"){
+  const recent10 = lottoHistory.slice(-10);
+  const recentNums = new Set();
+
+  recent10.forEach(item => {
+    item.numbers.forEach(n => recentNums.add(n));
+  });
+
+  pool = pool.filter(item => !recentNums.has(item.num));
+
+  if(pool.length < 6){
+    pool = Object.keys(freq).map(n => ({
+      num:Number(n),
+      count:freq[n]
+    }));
+  }
+}
 
   if(mode === "recentCold"){
     const recent10 = lottoHistory.slice(-10);
