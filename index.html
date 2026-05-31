@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link rel="icon" type="image/png" href="icon-192.png">
-
 <link rel="apple-touch-icon" href="icon-512.png">
+
 <title>로또 자동번호 추출기</title>
 
 <style>
@@ -18,7 +18,7 @@ body{
 }
 
 .wrap{
-  max-width:520px;
+  max-width:540px;
   margin:0 auto;
   padding:24px;
 }
@@ -26,9 +26,16 @@ body{
 .card{
   background:#fff;
   border-radius:24px;
-  padding:28px 22px;
+  padding:26px 20px;
   box-shadow:0 10px 30px rgba(0,0,0,.12);
   text-align:center;
+}
+
+.logo{
+  width:82px;
+  height:82px;
+  border-radius:22px;
+  margin-bottom:10px;
 }
 
 h1{
@@ -38,7 +45,8 @@ h1{
 
 .desc{
   color:#666;
-  margin-bottom:20px;
+  margin-bottom:18px;
+  line-height:1.5;
 }
 
 select{
@@ -46,8 +54,8 @@ select{
   padding:15px;
   border-radius:14px;
   border:1px solid #ddd;
-  font-size:17px;
-  margin-bottom:12px;
+  font-size:16px;
+  margin-bottom:10px;
 }
 
 .btn{
@@ -81,7 +89,6 @@ select{
   background:#f8fafc;
   border-radius:24px;
   overflow:hidden;
-  position:relative;
 }
 
 .machine.active{
@@ -98,7 +105,7 @@ select{
   display:flex;
   align-items:center;
   justify-content:center;
-  animation: bounce 0.45s infinite alternate;
+  animation:bounce .45s infinite alternate;
 }
 
 .spin-ball:nth-child(2){animation-delay:.1s;background:#1976d2;}
@@ -108,12 +115,14 @@ select{
 .spin-ball:nth-child(6){animation-delay:.5s;background:#8e24aa;}
 
 @keyframes bounce{
-  from{
-    transform:translateY(38px) rotate(0deg);
-  }
-  to{
-    transform:translateY(-38px) rotate(360deg);
-  }
+  from{transform:translateY(38px) rotate(0deg);}
+  to{transform:translateY(-38px) rotate(360deg);}
+}
+
+.info{
+  font-size:13px;
+  color:#777;
+  margin-top:8px;
 }
 
 .result{
@@ -156,6 +165,17 @@ select{
 .gray{background:#666;}
 .green{background:#43a047;}
 
+.stats{
+  margin-top:20px;
+  background:#f8fafc;
+  border-radius:18px;
+  padding:14px;
+  font-size:14px;
+  color:#555;
+  line-height:1.6;
+  text-align:left;
+}
+
 .footer{
   margin-top:18px;
   font-size:13px;
@@ -167,8 +187,14 @@ select{
 <body>
 <div class="wrap">
   <div class="card">
+
+    <img src="icon-512.png" class="logo" alt="로또 아이콘">
+
     <h1>로또 자동번호 추출기</h1>
-    <p class="desc">게임 수를 선택한 뒤 로또번호를 추출하세요.</p>
+    <p class="desc">
+      과거 회차 데이터를 불러와 번호 출현 빈도를 분석하고<br>
+      선택한 방식으로 번호를 추천합니다.
+    </p>
 
     <select id="gameCount">
       <option value="1">1게임</option>
@@ -176,6 +202,13 @@ select{
       <option value="3">3게임</option>
       <option value="4">4게임</option>
       <option value="5" selected>5게임</option>
+    </select>
+
+    <select id="mode">
+      <option value="random">완전 랜덤</option>
+      <option value="hot">과거 많이 나온 번호 중심</option>
+      <option value="cold">과거 적게 나온 번호 중심</option>
+      <option value="mixed" selected>혼합 추천</option>
     </select>
 
     <button class="btn primary" onclick="generateLotto()">로또번호 추출</button>
@@ -190,29 +223,152 @@ select{
       <div class="spin-ball">?</div>
     </div>
 
+    <div id="status" class="info">과거 데이터를 불러오기 전입니다.</div>
+
     <div id="result" class="result"></div>
 
+    <div id="stats" class="stats" style="display:none;"></div>
+
     <div class="footer">
-      ※ 재미용 자동번호 추출기입니다.
+      ※ 과거 통계 기반 추천이며 당첨을 보장하지 않습니다.
     </div>
+
   </div>
 </div>
 
 <script>
+let lottoHistory = [];
 let savedText = "";
 
-function generateOneSet(){
+async function fetchRound(round){
+  const url = "https://www.dhlottery.co.kr/common.do?method=getLottoNumber&drwNo=" + round;
+
+  try{
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if(data.returnValue !== "success") return null;
+
+    return {
+      round:data.drwNo,
+      numbers:[
+        data.drwtNo1,
+        data.drwtNo2,
+        data.drwtNo3,
+        data.drwtNo4,
+        data.drwtNo5,
+        data.drwtNo6
+      ],
+      bonus:data.bnusNo
+    };
+  }catch(e){
+    return null;
+  }
+}
+
+async function loadHistory(){
+  if(lottoHistory.length > 0) return lottoHistory;
+
+  const status = document.getElementById("status");
+  status.textContent = "과거 로또 데이터를 불러오는 중입니다...";
+
+  let round = 1;
+  const list = [];
+
+  while(true){
+    const item = await fetchRound(round);
+
+    if(!item) break;
+
+    list.push(item);
+    status.textContent = round + "회차까지 불러오는 중...";
+    round++;
+
+    if(round > 1300) break;
+  }
+
+  lottoHistory = list;
+
+  if(lottoHistory.length === 0){
+    status.textContent = "데이터를 불러오지 못했습니다. 완전 랜덤으로 추출합니다.";
+  }else{
+    status.textContent = "총 " + lottoHistory.length + "회차 데이터 분석 완료";
+    showStats();
+  }
+
+  return lottoHistory;
+}
+
+function makeFrequency(){
+  const freq = {};
+
+  for(let i=1; i<=45; i++){
+    freq[i] = 0;
+  }
+
+  lottoHistory.forEach(item => {
+    item.numbers.forEach(n => {
+      freq[n]++;
+    });
+  });
+
+  return freq;
+}
+
+function shuffle(arr){
+  return arr.sort(() => Math.random() - 0.5);
+}
+
+function pickNumbersByMode(mode){
   const numbers = [];
 
-  while(numbers.length < 6){
-    const n = Math.floor(Math.random() * 45) + 1;
+  if(mode === "random" || lottoHistory.length === 0){
+    while(numbers.length < 6){
+      const n = Math.floor(Math.random() * 45) + 1;
+      if(!numbers.includes(n)) numbers.push(n);
+    }
+    return numbers.sort((a,b)=>a-b);
+  }
 
-    if(!numbers.includes(n)){
-      numbers.push(n);
+  const freq = makeFrequency();
+
+  let pool = Object.keys(freq).map(n => ({
+    num:Number(n),
+    count:freq[n]
+  }));
+
+  if(mode === "hot"){
+    pool.sort((a,b) => b.count - a.count);
+    pool = pool.slice(0, 22);
+  }
+
+  if(mode === "cold"){
+    pool.sort((a,b) => a.count - b.count);
+    pool = pool.slice(0, 22);
+  }
+
+  if(mode === "mixed"){
+    const hot = [...pool].sort((a,b)=>b.count-a.count).slice(0,15);
+    const cold = [...pool].sort((a,b)=>a.count-b.count).slice(0,15);
+    const middle = shuffle([...pool]).slice(0,15);
+    pool = [...hot, ...cold, ...middle];
+  }
+
+  pool = shuffle(pool);
+
+  for(const item of pool){
+    if(numbers.length >= 6) break;
+    if(!numbers.includes(item.num)){
+      numbers.push(item.num);
     }
   }
 
-  return numbers.sort((a,b) => a-b);
+  while(numbers.length < 6){
+    const n = Math.floor(Math.random() * 45) + 1;
+    if(!numbers.includes(n)) numbers.push(n);
+  }
+
+  return numbers.sort((a,b)=>a-b);
 }
 
 function getColor(num){
@@ -223,21 +379,24 @@ function getColor(num){
   return "green";
 }
 
-function generateLotto(){
+async function generateLotto(){
   const result = document.getElementById("result");
   const machine = document.getElementById("machine");
   const gameCount = Number(document.getElementById("gameCount").value);
+  const mode = document.getElementById("mode").value;
 
   result.innerHTML = "";
   savedText = "";
 
   machine.classList.add("active");
 
+  await loadHistory();
+
   setTimeout(() => {
     machine.classList.remove("active");
 
     for(let i=1; i<=gameCount; i++){
-      const nums = generateOneSet();
+      const nums = pickNumbersByMode(mode);
 
       savedText += `${i}게임: ${nums.join(", ")}\n`;
 
@@ -263,6 +422,25 @@ function generateLotto(){
       result.appendChild(setDiv);
     }
   }, 1600);
+}
+
+function showStats(){
+  const stats = document.getElementById("stats");
+  const freq = makeFrequency();
+
+  const sorted = Object.keys(freq).map(n => ({
+    num:Number(n),
+    count:freq[n]
+  }));
+
+  const hot = [...sorted].sort((a,b)=>b.count-a.count).slice(0,6);
+  const cold = [...sorted].sort((a,b)=>a.count-b.count).slice(0,6);
+
+  stats.style.display = "block";
+  stats.innerHTML =
+    "<b>통계 요약</b><br>" +
+    "가장 많이 나온 번호: " + hot.map(x => x.num + "번(" + x.count + "회)").join(", ") + "<br>" +
+    "가장 적게 나온 번호: " + cold.map(x => x.num + "번(" + x.count + "회)").join(", ");
 }
 
 function copyNumbers(){
