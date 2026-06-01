@@ -13,34 +13,30 @@ for(let i=1;i<lines.length;i++){
   const row =
     lines[i].split(",");
 
-  if(row.length < 9) continue;
+  if(row.length < 8) continue;
 
-  const round =
-    Number(row[0]);
+  const item = {
 
-  const date =
-    row[1];
+    round:Number(row[0]),
 
-  const numbers = [
-    Number(row[2]),
-    Number(row[3]),
-    Number(row[4]),
-    Number(row[5]),
-    Number(row[6]),
-    Number(row[7])
-  ];
+    numbers:[
+      Number(row[1]),
+      Number(row[2]),
+      Number(row[3]),
+      Number(row[4]),
+      Number(row[5]),
+      Number(row[6])
+    ],
 
-  const bonus =
-    Number(row[8]);
+    bonus:Number(row[7])
 
-  list.push({
-    round,
-    date,
-    numbers,
-    bonus
-  });
+  };
+
+  list.push(item);
 
 }
+
+list.sort((a,b)=>a.round-b.round);
 
 const js =
   "const LOTTO_HISTORY = " +
