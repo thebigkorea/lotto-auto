@@ -11,7 +11,9 @@ const list = [];
 for(let i=1;i<lines.length;i++){
 
   const row =
-    lines[i].split(",");
+    lines[i]
+      .replace(/\r/g,"")
+      .split(",");
 
   if(row.length < 8) continue;
 
@@ -32,7 +34,14 @@ for(let i=1;i<lines.length;i++){
 
   };
 
-  list.push(item);
+  if(
+    item.round &&
+    item.numbers.every(n => n >= 1 && n <= 45) &&
+    item.bonus >= 1 &&
+    item.bonus <= 45
+  ){
+    list.push(item);
+  }
 
 }
 
