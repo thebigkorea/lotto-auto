@@ -56,11 +56,11 @@ select{width:100%;padding:15px;border-radius:14px;border:1px solid #ddd;font-siz
 
     <h1>로또 자동번호 추출기</h1>
     <p class="desc">
-      최신 당첨번호와 과거 회차 데이터를 분석해<br>
+      저장된 과거 당첨번호 데이터를 분석해<br>
       선택한 방식으로 번호를 추천합니다.
     </p>
 
-    <div id="latestBox" class="latest">최신 당첨번호를 불러오는 중입니다...</div>
+    <div id="latestBox" class="latest">저장된 당첨번호를 불러오는 중입니다...</div>
     <div id="recentBox" class="recent-box" style="display:none;"></div>
 
     <select id="gameCount">
@@ -91,7 +91,7 @@ select{width:100%;padding:15px;border-radius:14px;border:1px solid #ddd;font-siz
       <div class="spin-ball">?</div>
     </div>
 
-    <div id="status" class="info">과거 데이터를 불러오는 중입니다.</div>
+    <div id="status" class="info">저장된 과거 데이터를 불러오는 중입니다.</div>
     <div id="result" class="result"></div>
     <div id="stats" class="stats" style="display:none;"></div>
 
@@ -99,9 +99,9 @@ select{width:100%;padding:15px;border-radius:14px;border:1px solid #ddd;font-siz
   </div>
 </div>
 
-<script>
-const API_URL = "https://script.google.com/macros/s/AKfycbxRvNF1kiHRpFadtq5exI3rFSWmesVBPmsBDoK2v99HPtjcR1j6Qw6lIXFgVts50aVclQ/exec";
+<script src="lotto-data.js"></script>
 
+<script>
 let lottoHistory = [];
 let savedText = "";
 
@@ -117,55 +117,45 @@ function ballHtml(num, bonus=false){
   return `<div class="ball ${getColor(num)} ${bonus ? "bonus" : ""}">${num}</div>`;
 }
 
-async function loadLottoData(){
+function loadLottoData(){
   const latestBox = document.getElementById("latestBox");
   const recentBox = document.getElementById("recentBox");
   const status = document.getElementById("status");
 
-  try{
-    status.textContent = "최신 로또 데이터를 불러오는 중입니다...";
-
-    const res = await fetch(API_URL + "?action=lotto");
-    const data = await res.json();
-
-    if(!data.success || !data.list || data.list.length === 0){
-      throw new Error("데이터 없음");
-    }
-
-    lottoHistory = data.list.slice().reverse();
-
-    const latest = data.list[0];
-
-    latestBox.innerHTML = `
-      <div class="latest-title">최신 당첨번호 ${latest.round}회</div>
-      <div>${latest.date}</div>
-      <div class="balls" style="margin-top:10px;">
-        ${latest.numbers.map(n => ballHtml(n)).join("")}
-        ${ballHtml(latest.bonus, true)}
-      </div>
-      <div style="font-size:12px;margin-top:6px;">검은 테두리: 보너스 번호</div>
-    `;
-
-    const recent = data.list.slice(0, 5);
-
-    recentBox.style.display = "block";
-    recentBox.innerHTML =
-      "<b>최근 5회 당첨번호</b><br>" +
-      recent.map(item =>
-        `${item.round}회: ${item.numbers.join(", ")} / 보너스 ${item.bonus}`
-      ).join("<br>");
-
-    status.textContent =
-      "최근 " + data.count + "회차 데이터 분석 완료";
-
-    showStats();
-
-  }catch(e){
-    latestBox.innerHTML = "최신 당첨번호를 불러오지 못했습니다.";
-    status.textContent =
-      "데이터를 불러오지 못했습니다. 완전 랜덤으로 추출합니다.";
+  if(typeof LOTTO_HISTORY === "undefined" || !Array.isArray(LOTTO_HISTORY) || LOTTO_HISTORY.length === 0){
+    latestBox.innerHTML = "저장된 로또 데이터가 없습니다.";
+    status.textContent = "lotto-data.js 파일을 확인하세요.";
     lottoHistory = [];
+    return;
   }
+
+  lottoHistory = LOTTO_HISTORY.slice().sort((a,b) => a.round - b.round);
+
+  const latest = lottoHistory[lottoHistory.length - 1];
+
+  latestBox.innerHTML = `
+    <div class="latest-title">저장된 최신 당첨번호 ${latest.round}회</div>
+    <div>${latest.date || ""}</div>
+    <div class="balls" style="margin-top:10px;">
+      ${latest.numbers.map(n => ballHtml(n)).join("")}
+      ${ballHtml(latest.bonus, true)}
+    </div>
+    <div style="font-size:12px;margin-top:6px;">검은 테두리: 보너스 번호</div>
+  `;
+
+  const recent = lottoHistory.slice(-5).reverse();
+
+  recentBox.style.display = "block";
+  recentBox.innerHTML =
+    "<b>저장된 최근 5회 당첨번호</b><br>" +
+    recent.map(item =>
+      `${item.round}회: ${item.numbers.join(", ")} / 보너스 ${item.bonus}`
+    ).join("<br>");
+
+  status.textContent =
+    "저장된 " + lottoHistory.length + "회차 데이터 분석 완료";
+
+  showStats();
 }
 
 function makeFrequency(){
@@ -258,7 +248,7 @@ function pickNumbersByMode(mode){
   return numbers.sort((a,b)=>a-b);
 }
 
-async function generateLotto(){
+function generateLotto(){
   const result = document.getElementById("result");
   const machine = document.getElementById("machine");
   const gameCount = Number(document.getElementById("gameCount").value);
@@ -269,7 +259,7 @@ async function generateLotto(){
   machine.classList.add("active");
 
   if(lottoHistory.length === 0){
-    await loadLottoData();
+    loadLottoData();
   }
 
   setTimeout(() => {
