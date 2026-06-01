@@ -40,7 +40,11 @@ select{width:100%;padding:15px;border-radius:14px;border:1px solid #ddd;font-siz
 .balls{display:flex;justify-content:center;gap:7px;flex-wrap:wrap}
 .ball{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;color:white}
 .bonus{outline:3px solid #111}
-.yellow{background:#f6b100}.blue{background:#1976d2}.red{background:#e53935}.gray{background:#666}.green{background:#43a047}
+.yellow{background:#f6b100}
+.blue{background:#1976d2}
+.red{background:#e53935}
+.gray{background:#666}
+.green{background:#43a047}
 .footer{margin-top:18px;font-size:13px;color:#777}
 </style>
 </head>
@@ -51,9 +55,11 @@ select{width:100%;padding:15px;border-radius:14px;border:1px solid #ddd;font-siz
     <img src="icon-512.png" class="logo" alt="로또 아이콘">
 
     <h1>로또 자동번호 추출기</h1>
-    <p class="desc">최신 당첨번호와 과거 회차 데이터를 분석해<br>선택한 방식으로 번호를 추천합니다.</p>
+    <p class="desc">
+      최신 당첨번호와 과거 회차 데이터를 분석해<br>
+      선택한 방식으로 번호를 추천합니다.
+    </p>
 
-    <div id="recentBox" class="stats" style="display:none;"></div>
     <div id="latestBox" class="latest">최신 당첨번호를 불러오는 중입니다...</div>
     <div id="recentBox" class="recent-box" style="display:none;"></div>
 
@@ -69,20 +75,23 @@ select{width:100%;padding:15px;border-radius:14px;border:1px solid #ddd;font-siz
       <option value="random">완전 랜덤</option>
       <option value="hot">과거 많이 나온 번호 중심</option>
       <option value="cold">과거 적게 나온 번호 중심</option>
-      <option value="recentCold">최근 10회 미출현 번호 중심</option>
-      <option value="mixed" selected>혼합 추천</option>
-      <option value="recentCold">최근 10회 미출현 번호 중심</option>
+      <option value="recentCold" selected>최근 10회 미출현 번호 중심</option>
+      <option value="mixed">혼합 추천</option>
     </select>
 
     <button class="btn primary" onclick="generateLotto()">로또번호 추출</button>
     <button class="btn sub" onclick="copyNumbers()">번호 복사하기</button>
 
     <div id="machine" class="machine">
-      <div class="spin-ball">?</div><div class="spin-ball">?</div><div class="spin-ball">?</div>
-      <div class="spin-ball">?</div><div class="spin-ball">?</div><div class="spin-ball">?</div>
+      <div class="spin-ball">?</div>
+      <div class="spin-ball">?</div>
+      <div class="spin-ball">?</div>
+      <div class="spin-ball">?</div>
+      <div class="spin-ball">?</div>
+      <div class="spin-ball">?</div>
     </div>
 
-    <div id="status" class="info">과거 데이터를 불러오기 전입니다.</div>
+    <div id="status" class="info">과거 데이터를 불러오는 중입니다.</div>
     <div id="result" class="result"></div>
     <div id="stats" class="stats" style="display:none;"></div>
 
@@ -91,102 +100,10 @@ select{width:100%;padding:15px;border-radius:14px;border:1px solid #ddd;font-siz
 </div>
 
 <script>
+const API_URL = "https://script.google.com/macros/s/AKfycbyoGnRliuDx1x7ZBbd6V_IvN3DFBmSCPGdPkjCW55twqvpd7hYBeLpBGFTZqf3KCoc06g/exec";
+
 let lottoHistory = [];
 let savedText = "";
-
-async function fetchRound(round){
-  const url = "https://www.dhlottery.co.kr/common.do?method=getLottoNumber&drwNo=" + round;
-  try{
-    const res = await fetch(url);
-    const data = await res.json();
-    if(data.returnValue !== "success") return null;
-
-    return {
-      round:data.drwNo,
-      date:data.drwNoDate,
-      numbers:[data.drwtNo1,data.drwtNo2,data.drwtNo3,data.drwtNo4,data.drwtNo5,data.drwtNo6],
-      bonus:data.bnusNo
-    };
-  }catch(e){
-    return null;
-  }
-}
-
-async function findLatestRound(){
-  let round = 1;
-  let latest = null;
-
-  while(true){
-    const item = await fetchRound(round);
-
-    if(!item) break;
-
-    latest = item;
-    round++;
-
-    if(round > 1300) break;
-  }
-
-  return latest;
-}
-
-function ballHtml(num){
-  return `<div class="ball ${getColor(num)}">${num}</div>`;
-}
-
-async function showLatest(){
-  const latestBox = document.getElementById("latestBox");
-  const recentBox = document.getElementById("recentBox");
-
-  const latest = await findLatestRound();
-
-  if(!latest){
-    latestBox.innerHTML = "최신 당첨번호를 불러오지 못했습니다.";
-    return;
-  }
-
-  latestBox.innerHTML = `
-    <b>최신 당첨번호 ${latest.round}회</b><br>
-    <div class="balls" style="margin-top:10px;">
-      ${latest.numbers.map(n => ballHtml(n)).join("")}
-    </div>
-    <div style="margin-top:8px;">보너스 번호: ${latest.bonus}</div>
-  `;
-
-  const recent = [];
-
-  for(let r = latest.round; r > latest.round - 5; r--){
-    const item = await fetchRound(r);
-    if(item) recent.push(item);
-  }
-
-  recentBox.style.display = "block";
-  recentBox.innerHTML =
-    "<b>최근 5회 당첨번호</b><br>" +
-    recent.map(item =>
-      `${item.round}회: ${item.numbers.join(", ")} / 보너스 ${item.bonus}`
-    ).join("<br>");
-}
-
-async function findLatestRound(){
-  let low = 1;
-  let high = 2000;
-  let latest = null;
-
-  while(low <= high){
-    const mid = Math.floor((low + high) / 2);
-    const data = await fetchRound(mid);
-
-    if(data){
-      latest = data;
-      low = mid + 1;
-    }else{
-      high = mid - 1;
-    }
-  }
-
-  return latest;
-}
 
 function getColor(num){
   if(num <= 10) return "yellow";
@@ -200,69 +117,55 @@ function ballHtml(num, bonus=false){
   return `<div class="ball ${getColor(num)} ${bonus ? "bonus" : ""}">${num}</div>`;
 }
 
-async function showLatest(){
+async function loadLottoData(){
   const latestBox = document.getElementById("latestBox");
   const recentBox = document.getElementById("recentBox");
-
-  const latest = await findLatestRound();
-
-  if(!latest){
-    latestBox.innerHTML = "최신 당첨번호를 불러오지 못했습니다.";
-    return;
-  }
-
-  latestBox.innerHTML = `
-    <div class="latest-title">최신 당첨번호 ${latest.round}회</div>
-    <div>${latest.date}</div>
-    <div class="balls" style="margin-top:10px;">
-      ${latest.numbers.map(n => ballHtml(n)).join("")}
-      ${ballHtml(latest.bonus, true)}
-    </div>
-    <div style="font-size:12px;margin-top:6px;">검은 테두리: 보너스 번호</div>
-  `;
-
-  const recent = [];
-  for(let r = latest.round; r > latest.round - 5; r--){
-    const item = await fetchRound(r);
-    if(item) recent.push(item);
-  }
-
-  recentBox.style.display = "block";
-  recentBox.innerHTML =
-    "<b>최근 5회 당첨번호</b><br>" +
-    recent.map(item =>
-      `${item.round}회: ${item.numbers.join(", ")} / 보너스 ${item.bonus}`
-    ).join("<br>");
-}
-
-async function loadHistory(){
-  if(lottoHistory.length > 0) return lottoHistory;
-
   const status = document.getElementById("status");
-  status.textContent = "과거 로또 데이터를 불러오는 중입니다...";
 
-  const latest = await findLatestRound();
-  if(!latest){
-    status.textContent = "데이터를 불러오지 못했습니다. 완전 랜덤으로 추출합니다.";
-    return [];
-  }
+  try{
+    status.textContent = "최신 로또 데이터를 불러오는 중입니다...";
 
-  const list = [];
+    const res = await fetch(API_URL + "?action=lotto");
+    const data = await res.json();
 
-  for(let round=1; round<=latest.round; round++){
-    const item = await fetchRound(round);
-    if(item) list.push(item);
-
-    if(round % 20 === 0){
-      status.textContent = round + "회차까지 불러오는 중...";
+    if(!data.success || !data.list || data.list.length === 0){
+      throw new Error("데이터 없음");
     }
+
+    lottoHistory = data.list.slice().reverse();
+
+    const latest = data.list[0];
+
+    latestBox.innerHTML = `
+      <div class="latest-title">최신 당첨번호 ${latest.round}회</div>
+      <div>${latest.date}</div>
+      <div class="balls" style="margin-top:10px;">
+        ${latest.numbers.map(n => ballHtml(n)).join("")}
+        ${ballHtml(latest.bonus, true)}
+      </div>
+      <div style="font-size:12px;margin-top:6px;">검은 테두리: 보너스 번호</div>
+    `;
+
+    const recent = data.list.slice(0, 5);
+
+    recentBox.style.display = "block";
+    recentBox.innerHTML =
+      "<b>최근 5회 당첨번호</b><br>" +
+      recent.map(item =>
+        `${item.round}회: ${item.numbers.join(", ")} / 보너스 ${item.bonus}`
+      ).join("<br>");
+
+    status.textContent =
+      "최근 " + data.count + "회차 데이터 분석 완료";
+
+    showStats();
+
+  }catch(e){
+    latestBox.innerHTML = "최신 당첨번호를 불러오지 못했습니다.";
+    status.textContent =
+      "데이터를 불러오지 못했습니다. 완전 랜덤으로 추출합니다.";
+    lottoHistory = [];
   }
-
-  lottoHistory = list;
-  status.textContent = "총 " + lottoHistory.length + "회차 데이터 분석 완료";
-  showStats();
-
-  return lottoHistory;
 }
 
 function makeFrequency(){
@@ -282,18 +185,26 @@ function shuffle(arr){
 
 function pickRandom(){
   const numbers = [];
+
   while(numbers.length < 6){
     const n = Math.floor(Math.random() * 45) + 1;
     if(!numbers.includes(n)) numbers.push(n);
   }
+
   return numbers.sort((a,b)=>a-b);
 }
 
 function pickNumbersByMode(mode){
-  if(mode === "random" || lottoHistory.length === 0) return pickRandom();
+  if(mode === "random" || lottoHistory.length === 0){
+    return pickRandom();
+  }
 
   const freq = makeFrequency();
-  let pool = Object.keys(freq).map(n => ({num:Number(n), count:freq[n]}));
+
+  let pool = Object.keys(freq).map(n => ({
+    num: Number(n),
+    count: freq[n]
+  }));
 
   if(mode === "hot"){
     pool.sort((a,b)=>b.count-a.count);
@@ -306,29 +217,21 @@ function pickNumbersByMode(mode){
   }
 
   if(mode === "recentCold"){
-  const recent10 = lottoHistory.slice(-10);
-  const recentNums = new Set();
-
-  recent10.forEach(item => {
-    item.numbers.forEach(n => recentNums.add(n));
-  });
-
-  pool = pool.filter(item => !recentNums.has(item.num));
-
-  if(pool.length < 6){
-    pool = Object.keys(freq).map(n => ({
-      num:Number(n),
-      count:freq[n]
-    }));
-  }
-}
-
-  if(mode === "recentCold"){
     const recent10 = lottoHistory.slice(-10);
     const recentNums = new Set();
-    recent10.forEach(item => item.numbers.forEach(n => recentNums.add(n)));
+
+    recent10.forEach(item => {
+      item.numbers.forEach(n => recentNums.add(n));
+    });
+
     pool = pool.filter(item => !recentNums.has(item.num));
-    if(pool.length < 6) pool = Object.keys(freq).map(n => ({num:Number(n), count:freq[n]}));
+
+    if(pool.length < 6){
+      pool = Object.keys(freq).map(n => ({
+        num:Number(n),
+        count:freq[n]
+      }));
+    }
   }
 
   if(mode === "mixed"){
@@ -341,6 +244,7 @@ function pickNumbersByMode(mode){
   pool = shuffle(pool);
 
   const numbers = [];
+
   for(const item of pool){
     if(numbers.length >= 6) break;
     if(!numbers.includes(item.num)) numbers.push(item.num);
@@ -364,7 +268,9 @@ async function generateLotto(){
   savedText = "";
   machine.classList.add("active");
 
-  await loadHistory();
+  if(lottoHistory.length === 0){
+    await loadLottoData();
+  }
 
   setTimeout(() => {
     machine.classList.remove("active");
@@ -377,26 +283,38 @@ async function generateLotto(){
       setDiv.className = "set";
       setDiv.innerHTML = `
         <div class="set-title">${i}게임</div>
-        <div class="balls">${nums.map(n => ballHtml(n)).join("")}</div>
+        <div class="balls">
+          ${nums.map(n => ballHtml(n)).join("")}
+        </div>
       `;
+
       result.appendChild(setDiv);
     }
   }, 1600);
 }
 
 function showStats(){
+  if(lottoHistory.length === 0) return;
+
   const stats = document.getElementById("stats");
   const freq = makeFrequency();
 
-  const sorted = Object.keys(freq).map(n => ({num:Number(n), count:freq[n]}));
+  const sorted = Object.keys(freq).map(n => ({
+    num:Number(n),
+    count:freq[n]
+  }));
+
   const hot = [...sorted].sort((a,b)=>b.count-a.count).slice(0,6);
   const cold = [...sorted].sort((a,b)=>a.count-b.count).slice(0,6);
 
   stats.style.display = "block";
   stats.innerHTML =
     "<b>통계 요약</b><br>" +
-    "많이 나온 번호: " + hot.map(x => x.num + "번(" + x.count + "회)").join(", ") + "<br>" +
-    "적게 나온 번호: " + cold.map(x => x.num + "번(" + x.count + "회)").join(", ");
+    "많이 나온 번호: " +
+    hot.map(x => x.num + "번(" + x.count + "회)").join(", ") +
+    "<br>" +
+    "적게 나온 번호: " +
+    cold.map(x => x.num + "번(" + x.count + "회)").join(", ");
 }
 
 function copyNumbers(){
@@ -410,13 +328,13 @@ function copyNumbers(){
     .catch(() => alert("복사에 실패했습니다."));
 }
 
-if ("serviceWorker" in navigator) {
+if("serviceWorker" in navigator){
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("./service-worker.js");
   });
 }
 
-showLatest();
+loadLottoData();
 </script>
 </body>
 </html>
