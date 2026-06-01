@@ -145,12 +145,8 @@ function loadLottoData(){
 
   const recent = lottoHistory.slice(-5).reverse();
 
-  recentBox.style.display = "block";
-  recentBox.innerHTML =
-    "<b>저장된 최근 5회 당첨번호</b><br>" +
-    recent.map(item =>
-      `${item.round}회: ${item.numbers.join(", ")} / 보너스 ${item.bonus}`
-    ).join("<br>");
+  recentBox.style.display = "none";
+  recentBox.innerHTML = "";
 
   status.textContent =
     "저장된 " + lottoHistory.length + "회차 데이터 분석 완료";
