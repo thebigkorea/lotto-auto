@@ -254,6 +254,19 @@ function pickNumbersByMode(mode){
   return numbers.sort((a,b)=>a-b);
 }
 
+function renderTodayPick(numbers){
+  const latestBox = document.getElementById("latestBox");
+
+  latestBox.style.display = "block";
+
+  latestBox.innerHTML = `
+    <div class="latest-title">오늘의 추천 번호</div>
+    <div class="balls" style="margin-top:10px;">
+      ${numbers.map(n => ballHtml(n)).join("")}
+    </div>
+  `;
+}
+
 function generateLotto(){
   const result = document.getElementById("result");
   const machine = document.getElementById("machine");
@@ -273,9 +286,11 @@ function generateLotto(){
 
     for(let i=1;i<=gameCount;i++){
       const nums = pickNumbersByMode(mode);
+
       if(i === 1){
         renderTodayPick(nums);
       }
+
       savedText += `${i}게임: ${nums.join(", ")}\n`;
 
       const setDiv = document.createElement("div");
