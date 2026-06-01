@@ -1,0 +1,174 @@
+```html
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>lotto-data.js 생성기</title>
+
+<style>
+body{
+  font-family:Arial,sans-serif;
+  background:#f5f5f5;
+  padding:30px;
+}
+
+.box{
+  max-width:900px;
+  margin:auto;
+  background:white;
+  padding:24px;
+  border-radius:20px;
+}
+
+button{
+  padding:14px 20px;
+  border:0;
+  border-radius:12px;
+  background:#111827;
+  color:white;
+  font-size:16px;
+  cursor:pointer;
+}
+
+pre{
+  background:#111;
+  color:#0f0;
+  padding:20px;
+  border-radius:14px;
+  overflow:auto;
+  max-height:500px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+
+  <h1>lotto-data.js 생성기</h1>
+
+  <button onclick="makeData()">
+    lotto-data.js 생성 시작
+  </button>
+
+  <p id="status"></p>
+
+  <pre id="log"></pre>
+
+</div>
+
+<script>
+
+async function fetchRound(round){
+
+  const url =
+    "https://www.dhlottery.co.kr/common.do?method=getLottoNumber&drwNo=" + round;
+
+  try{
+
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if(data.returnValue !== "success"){
+      return null;
+    }
+
+    return {
+      round:data.drwNo,
+      date:data.drwNoDate,
+      numbers:[
+        data.drwtNo1,
+        data.drwtNo2,
+        data.drwtNo3,
+        data.drwtNo4,
+        data.drwtNo5,
+        data.drwtNo6
+      ],
+      bonus:data.bnusNo
+    };
+
+  }catch(err){
+    return null;
+  }
+}
+
+async function findLatest(){
+
+  let latest = 1;
+
+  for(let i=1100;i<=1400;i++){
+
+    const data = await fetchRound(i);
+
+    if(data){
+      latest = i;
+    }
+  }
+
+  return latest;
+}
+
+async function makeData(){
+
+  const status =
+    document.getElementById("status");
+
+  const log =
+    document.getElementById("log");
+
+  status.textContent =
+    "최신 회차 찾는 중...";
+
+  const latest =
+    await findLatest();
+
+  status.textContent =
+    "총 " + latest + "회 데이터 생성 중...";
+
+  const list = [];
+
+  for(let i=1;i<=latest;i++){
+
+    const item =
+      await fetchRound(i);
+
+    if(item){
+      list.push(item);
+    }
+
+    status.textContent =
+      i + " / " + latest + "회 수집 중...";
+  }
+
+  const js =
+    "const LOTTO_HISTORY = " +
+    JSON.stringify(list,null,2) +
+    ";";
+
+  log.textContent = js;
+
+  const blob = new Blob([js], {
+    type:"application/javascript"
+  });
+
+  const url =
+    URL.createObjectURL(blob);
+
+  const a =
+    document.createElement("a");
+
+  a.href = url;
+  a.download = "lotto-data.js";
+
+  a.click();
+
+  status.textContent =
+    "완료: lotto-data.js 다운로드됨";
+}
+
+</script>
+
+</body>
+</html>
+```
