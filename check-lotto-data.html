@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>로또 데이터 검사</title>
+<style>
+body{font-family:Arial,sans-serif;background:#f5f5f5;padding:20px}
+.box{max-width:720px;margin:auto;background:white;padding:20px;border-radius:16px}
+.ok{color:green;font-weight:bold}
+.err{color:red;font-weight:bold}
+pre{background:#111;color:#0f0;padding:15px;border-radius:12px;white-space:pre-wrap}
+</style>
+</head>
+<body>
+
+<div class="box">
+  <h1>로또 데이터 검사</h1>
+  <div id="summary">검사 중...</div>
+  <pre id="result"></pre>
+</div>
+
+<script src="lotto-data.js"></script>
+
+<script>
+function checkLottoData(){
+  const summary = document.getElementById("summary");
+  const result = document.getElementById("result");
+
+  const logs = [];
+  const errors = [];
+
+  if(typeof LOTTO_HISTORY === "undefined"){
+    summary.innerHTML = '<span class="err">실패: LOTTO_HISTORY가 없습니다.</span>';
+    result.textContent = "lotto-data.js 파일 안에 const LOTTO_HISTORY = [...] 형식이 있는지 확인하세요.";
+    return;
+  }
+
+  if(!Array.isArray(LOTTO_HISTORY)){
+    summary.innerHTML = '<span class="err">실패: LOTTO_HISTORY가 배열이 아닙니다.</span>';
+    return;
+  }
+
+  const data = LOTTO_HISTORY.slice().sort((a,b)=>a.round-b.round);
+
+  logs.push("총 데이터 수: " + data.length + "개");
+  logs.push("첫 회차: " + data[0].round + "회");
+  logs.push("마지막 회차: " + data[data.length - 1].round + "회");
+
+  const rounds = new Set();
+
+  data.forEach((item, index) => {
+    const label = item.round + "회";
+
+    if(!item.round){
+      errors.push(label + ": round 없음");
+    }
+
+    if(rounds.has(item.round)){
+      errors.push(label + ": 회차 중복");
+    }
+
+    rounds.add(item.round);
+
+    if(index > 0){
+      const prev = data[index - 1].round;
+      if(item.round !== prev + 1){
+        errors.push(prev + "회 다음에 " + item.round + "회가 나옵니다. 중간 회차 누락 가능");
+      }
+    }
+
+    if(!Array.isArray(item.numbers) || item.numbers.length !== 6){
+      errors.push(label + ": 당첨번호가 6개가 아님");
+      return;
+    }
+
+    const nums = item.numbers;
+    const unique = new Set(nums);
+
+    if(unique.size !== 6){
+      errors.push(label + ": 당첨번호 중복 있음");
+    }
+
+    nums.forEach(n => {
+      if(typeof n !== "number" || n < 1 || n > 45){
+        errors.push(label + ": 번호 범위 오류 - " + n);
+      }
+    });
+
+    if(typeof item.bonus !== "number" || item.bonus < 1 || item.bonus > 45){
+      errors.push(label + ": 보너스 번호 오류 - " + item.bonus);
+    }
+
+    if(nums.includes(item.bonus)){
+      errors.push(label + ": 보너스 번호가 당첨번호와 중복");
+    }
+  });
+
+  if(errors.length === 0){
+    summary.innerHTML = '<span class="ok">정상: 로또 데이터에 큰 오류가 없습니다.</span>';
+  }else{
+    summary.innerHTML = '<span class="err">오류 발견: ' + errors.length + '개</span>';
+  }
+
+  result.textContent =
+    logs.join("\n") +
+    "\n\n" +
+    (errors.length ? errors.join("\n") : "오류 없음");
+}
+
+checkLottoData();
+</script>
+
+</body>
+</html>
