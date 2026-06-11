@@ -12,75 +12,241 @@
 <title>로또 자동번호 추출기</title>
 
 <style>
-body{margin:0;font-family:Arial,sans-serif;background:#f5f1e8;color:#222}
-.wrap{max-width:560px;margin:0 auto;padding:24px}
-.card{background:#fff;border-radius:24px;padding:24px 20px;box-shadow:0 10px 30px rgba(0,0,0,.12);text-align:center}
-.logo{width:82px;height:82px;border-radius:22px;margin-bottom:10px}
-h1{margin:0 0 8px;font-size:28px}
-.desc{color:#666;margin-bottom:18px;line-height:1.5}
-select{width:100%;padding:15px;border-radius:14px;border:1px solid #ddd;font-size:16px;margin-bottom:10px}
-.btn{width:100%;border:0;border-radius:16px;padding:16px;font-size:18px;font-weight:700;cursor:pointer;margin-top:10px}
-.primary{background:#1f2937;color:#fff}
-.sub{background:#e5e7eb;color:#111}
-.latest,.recent-box,.stats{margin-top:18px;background:#f8fafc;border-radius:18px;padding:14px;font-size:14px;color:#555;line-height:1.6}
-.latest-title{font-weight:800;color:#111;margin-bottom:8px}
-.machine{height:140px;margin:22px auto;display:none;align-items:center;justify-content:center;gap:12px;background:#f8fafc;border-radius:24px;overflow:hidden}
-.machine.active{display:flex}
-.spin-ball{width:42px;height:42px;border-radius:50%;background:#f6b100;color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;animation:bounce .45s infinite alternate}
-.spin-ball:nth-child(2){animation-delay:.1s;background:#1976d2}
-.spin-ball:nth-child(3){animation-delay:.2s;background:#e53935}
-.spin-ball:nth-child(4){animation-delay:.3s;background:#666}
-.spin-ball:nth-child(5){animation-delay:.4s;background:#43a047}
-.spin-ball:nth-child(6){animation-delay:.5s;background:#8e24aa}
-@keyframes bounce{from{transform:translateY(38px) rotate(0deg)}to{transform:translateY(-38px) rotate(360deg)}}
-.info{font-size:13px;color:#777;margin-top:8px}
-.result{margin-top:22px}
-.set{background:#fafafa;border-radius:18px;padding:14px;margin-bottom:14px}
-.set-title{margin-bottom:10px;font-weight:700}
-.balls{display:flex;justify-content:center;gap:7px;flex-wrap:wrap}
-.ball{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;color:white}
-.bonus{outline:3px solid #111}
-.yellow{background:#f6b100}
-.blue{background:#1976d2}
-.red{background:#e53935}
-.gray{background:#666}
-.green{background:#43a047}
-.footer{margin-top:18px;font-size:13px;color:#777}
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:#f5f1e8;
+  color:#222;
+}
+
+.wrap{
+  max-width:560px;
+  margin:0 auto;
+  padding:24px;
+}
+
+.card{
+  background:#fff;
+  border-radius:24px;
+  padding:24px 20px;
+  box-shadow:0 10px 30px rgba(0,0,0,.12);
+  text-align:center;
+}
+
+.logo{
+  width:82px;
+  height:82px;
+  border-radius:24px;
+  margin-bottom:10px;
+}
+
+h1{
+  margin:0 0 8px;
+  font-size:28px;
+}
+
+.desc{
+  color:#666;
+  margin-bottom:18px;
+  line-height:1.5;
+}
+
+select{
+  width:100%;
+  padding:15px;
+  border-radius:14px;
+  border:1px solid #ddd;
+  font-size:16px;
+  margin-bottom:10px;
+}
+
+.mode-buttons,
+.action-buttons{
+  display:flex;
+  gap:10px;
+  justify-content:center;
+  margin:14px 0;
+}
+
+.mode-buttons button,
+.action-buttons button{
+  flex:1;
+  padding:13px 10px;
+  border:0;
+  border-radius:14px;
+  background:#222;
+  color:#fff;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.mode-buttons button.active{
+  background:#ffb000;
+  color:#111;
+}
+
+.sub{
+  background:#e5e7eb !important;
+  color:#111 !important;
+}
+
+.number-grid{
+  display:grid;
+  grid-template-columns:repeat(9,1fr);
+  gap:8px;
+  max-width:520px;
+  margin:18px auto;
+}
+
+.num-btn{
+  height:42px;
+  border-radius:50%;
+  border:1px solid #ddd;
+  background:#fff;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.num-btn.selected{
+  background:#ffcc00;
+  border-color:#ff9900;
+}
+
+.selected-box{
+  margin-top:14px;
+  padding:12px;
+  background:#f8fafc;
+  border-radius:16px;
+}
+
+.selected-title{
+  font-weight:800;
+  margin-bottom:8px;
+}
+
+.machine{
+  height:140px;
+  margin:22px auto;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+  background:#f8fafc;
+  border-radius:18px;
+}
+
+.machine.active{
+  display:flex;
+}
+
+.spin-ball{
+  width:42px;
+  height:42px;
+  border-radius:50%;
+  background:#f6b100;
+  color:#fff;
+  font-weight:800;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  animation:bounce 1s infinite;
+}
+
+.spin-ball:nth-child(2){animation-delay:.1s;background:#1976d2;}
+.spin-ball:nth-child(3){animation-delay:.2s;background:#e53935;}
+.spin-ball:nth-child(4){animation-delay:.3s;background:#666;}
+.spin-ball:nth-child(5){animation-delay:.4s;background:#43a047;}
+.spin-ball:nth-child(6){animation-delay:.5s;background:#8e24aa;}
+
+@keyframes bounce{
+  from{transform:translateY(38px) rotate(0deg);}
+  to{transform:translateY(-38px) rotate(360deg);}
+}
+
+.result{
+  margin-top:22px;
+}
+
+.game{
+  background:#f8fafc;
+  border-radius:18px;
+  padding:14px;
+  margin-top:12px;
+}
+
+.game-title{
+  font-weight:800;
+  margin-bottom:10px;
+}
+
+.ball{
+  display:inline-flex;
+  width:42px;
+  height:42px;
+  border-radius:50%;
+  align-items:center;
+  justify-content:center;
+  background:#ffcc00;
+  color:#111;
+  font-weight:800;
+  margin:4px;
+  box-shadow:0 3px 6px rgba(0,0,0,.2);
+}
+
+.info{
+  font-size:13px;
+  color:#777;
+  margin-top:8px;
+  line-height:1.5;
+}
 </style>
 </head>
 
 <body>
+
 <div class="wrap">
   <div class="card">
-    <img src="icon-512.png" class="logo" alt="로또 아이콘">
+
+    <img src="icon-192.png" class="logo" alt="로또 아이콘">
 
     <h1>로또 자동번호 추출기</h1>
-    <p class="desc">
-      저장된 과거 당첨번호 데이터를 분석해<br>
-      선택한 방식으로 번호를 추천합니다.
-    </p>
 
-    <div id="latestBox" class="latest">저장된 당첨번호를 불러오는 중입니다...</div>
-    <div id="recentBox" class="recent-box" style="display:none;"></div>
+    <p class="desc">
+      자동 · 반자동 · 수동으로 로또 번호를 선택할 수 있습니다.
+    </p>
 
     <select id="gameCount">
       <option value="1">1게임</option>
       <option value="2">2게임</option>
       <option value="3">3게임</option>
       <option value="4">4게임</option>
-      <option value="5" selected>5게임</option>
+      <option value="5">5게임</option>
     </select>
 
-    <select id="mode">
-      <option value="random">완전 랜덤</option>
-      <option value="hot">과거 많이 나온 번호 중심</option>
-      <option value="cold">과거 적게 나온 번호 중심</option>
-      <option value="recentCold" selected>최근 10회 미출현 번호 중심</option>
-      <option value="mixed">혼합 추천</option>
-    </select>
+    <div class="mode-buttons">
+      <button id="autoModeBtn" class="active">전체자동</button>
+      <button id="semiModeBtn">반자동</button>
+      <button id="manualModeBtn">수동</button>
+    </div>
 
-    <button class="btn primary" onclick="generateLotto()">로또번호 추출</button>
-    <button class="btn sub" onclick="copyNumbers()">번호 복사하기</button>
+    <div id="numberGrid" class="number-grid"></div>
+
+    <div class="selected-box">
+      <div class="selected-title">선택한 번호</div>
+      <div id="selectedNumbers"></div>
+      <div class="info">
+        반자동은 원하는 번호를 먼저 선택하고 추출하면 나머지가 자동으로 채워집니다.
+      </div>
+    </div>
+
+    <div class="action-buttons">
+      <button id="generateBtn">로또 번호 추출</button>
+      <button id="resetBtn" class="sub">초기화</button>
+    </div>
 
     <div id="machine" class="machine">
       <div class="spin-ball">?</div>
@@ -91,264 +257,255 @@ select{width:100%;padding:15px;border-radius:14px;border:1px solid #ddd;font-siz
       <div class="spin-ball">?</div>
     </div>
 
-    <div id="status" class="info">저장된 과거 데이터를 불러오는 중입니다.</div>
-    <div id="result" class="result"></div>
-    <div id="stats" class="stats" style="display:none;"></div>
+    <div id="resultBox" class="result"></div>
 
-    <div class="footer">※ 과거 통계 기반 추천이며 당첨을 보장하지 않습니다.</div>
   </div>
 </div>
 
-<script src="lotto-data.js"></script>
-
 <script>
-let lottoHistory = [];
-let savedText = "";
+let selectedNumbers = [];
+let fixedNumbers = [];
+let currentMode = "auto";
 
-function getColor(num){
-  if(num <= 10) return "yellow";
-  if(num <= 20) return "blue";
-  if(num <= 30) return "red";
-  if(num <= 40) return "gray";
-  return "green";
+document.addEventListener("DOMContentLoaded", () => {
+  renderNumberButtons();
+
+  document.getElementById("autoModeBtn").addEventListener("click", () => setMode("auto"));
+  document.getElementById("semiModeBtn").addEventListener("click", () => setMode("semi"));
+  document.getElementById("manualModeBtn").addEventListener("click", () => setMode("manual"));
+
+  document.getElementById("generateBtn").addEventListener("click", generateLotto);
+  document.getElementById("resetBtn").addEventListener("click", resetLotto);
+});
+
+function setMode(mode){
+  currentMode = mode;
+  selectedNumbers = [];
+  fixedNumbers = [];
+
+  document.getElementById("autoModeBtn").classList.remove("active");
+  document.getElementById("semiModeBtn").classList.remove("active");
+  document.getElementById("manualModeBtn").classList.remove("active");
+
+  if(mode === "auto") document.getElementById("autoModeBtn").classList.add("active");
+  if(mode === "semi") document.getElementById("semiModeBtn").classList.add("active");
+  if(mode === "manual") document.getElementById("manualModeBtn").classList.add("active");
+
+  renderNumberButtons();
+  renderSelectedNumbers();
+  document.getElementById("resultBox").innerHTML = "";
 }
 
-function ballHtml(num, bonus=false){
-  return `<div class="ball ${getColor(num)} ${bonus ? "bonus" : ""}">${num}</div>`;
+function renderNumberButtons(){
+  const box = document.getElementById("numberGrid");
+  box.innerHTML = "";
+
+  for(let i = 1; i <= 45; i++){
+    const btn = document.createElement("button");
+    btn.className = "num-btn";
+    btn.textContent = i;
+
+    if(selectedNumbers.includes(i)){
+      btn.classList.add("selected");
+    }
+
+    btn.onclick = () => toggleNumber(i);
+    box.appendChild(btn);
+  }
 }
 
-function loadLottoData(){
-  const latestBox = document.getElementById("latestBox");
-  const recentBox = document.getElementById("recentBox");
-  const status = document.getElementById("status");
+function toggleNumber(num){
 
-  if(typeof LOTTO_HISTORY === "undefined" || !Array.isArray(LOTTO_HISTORY) || LOTTO_HISTORY.length === 0){
-    latestBox.innerHTML = "저장된 로또 데이터가 없습니다.";
-    status.textContent = "lotto-data.js 파일을 확인하세요.";
-    lottoHistory = [];
+  if(currentMode === "auto"){
+    alert("전체자동 모드에서는 번호를 직접 선택할 수 없습니다.");
     return;
   }
 
-  lottoHistory = LOTTO_HISTORY.slice().sort((a,b) => a.round - b.round);
-
-  const latest = lottoHistory[lottoHistory.length - 1];
-
-  latestBox.innerHTML = "";
-  latestBox.style.display = "none";
-
-  function renderTodayPick(numbers){
-
-  const latestBox = document.getElementById("latestBox");
-
-  latestBox.style.display = "block";
-
-  latestBox.innerHTML = `
-    <div class="latest-title">
-      오늘의 추천 번호
-    </div>
-
-    <div class="balls" style="margin-top:10px;">
-      ${numbers.map(n => ballHtml(n)).join("")}
-    </div>
-  `;
-}
-
-  const recent = lottoHistory.slice(-5).reverse();
-
-  recentBox.style.display = "none";
-  recentBox.innerHTML = "";
-
-  status.textContent =
-    "저장된 " + lottoHistory.length + "회차 데이터 분석 완료";
-
-  showStats();
-}
-
-function makeFrequency(){
-  const freq = {};
-  for(let i=1;i<=45;i++) freq[i] = 0;
-
-  lottoHistory.forEach(item => {
-    item.numbers.forEach(n => freq[n]++);
-  });
-
-  return freq;
-}
-
-function shuffle(arr){
-  return arr.sort(() => Math.random() - 0.5);
-}
-
-function pickRandom(){
-  const numbers = [];
-
-  while(numbers.length < 6){
-    const n = Math.floor(Math.random() * 45) + 1;
-    if(!numbers.includes(n)) numbers.push(n);
-  }
-
-  return numbers.sort((a,b)=>a-b);
-}
-
-function pickNumbersByMode(mode){
-  if(mode === "random" || lottoHistory.length === 0){
-    return pickRandom();
-  }
-
-  const freq = makeFrequency();
-
-  let pool = Object.keys(freq).map(n => ({
-    num: Number(n),
-    count: freq[n]
-  }));
-
-  if(mode === "hot"){
-    pool.sort((a,b)=>b.count-a.count);
-    pool = pool.slice(0,22);
-  }
-
-  if(mode === "cold"){
-    pool.sort((a,b)=>a.count-b.count);
-    pool = pool.slice(0,22);
-  }
-
-  if(mode === "recentCold"){
-    const recent10 = lottoHistory.slice(-10);
-    const recentNums = new Set();
-
-    recent10.forEach(item => {
-      item.numbers.forEach(n => recentNums.add(n));
-    });
-
-    pool = pool.filter(item => !recentNums.has(item.num));
-
-    if(pool.length < 6){
-      pool = Object.keys(freq).map(n => ({
-        num:Number(n),
-        count:freq[n]
-      }));
+  if(selectedNumbers.includes(num)){
+    selectedNumbers = selectedNumbers.filter(n => n !== num);
+    fixedNumbers = fixedNumbers.filter(n => n !== num);
+  }else{
+    if(selectedNumbers.length >= 6){
+      alert("번호는 6개까지만 선택할 수 있습니다.");
+      return;
     }
+
+    selectedNumbers.push(num);
+    fixedNumbers.push(num);
   }
 
-  if(mode === "mixed"){
-    const hot = [...pool].sort((a,b)=>b.count-a.count).slice(0,15);
-    const cold = [...pool].sort((a,b)=>a.count-b.count).slice(0,15);
-    const middle = shuffle([...pool]).slice(0,15);
-    pool = [...hot, ...cold, ...middle];
-  }
+  selectedNumbers.sort((a,b)=>a-b);
+  fixedNumbers.sort((a,b)=>a-b);
 
-  pool = shuffle(pool);
-
-  const numbers = [];
-
-  for(const item of pool){
-    if(numbers.length >= 6) break;
-    if(!numbers.includes(item.num)) numbers.push(item.num);
-  }
-
-  while(numbers.length < 6){
-    const n = Math.floor(Math.random() * 45) + 1;
-    if(!numbers.includes(n)) numbers.push(n);
-  }
-
-  return numbers.sort((a,b)=>a-b);
-}
-
-function renderTodayPick(numbers){
-  const latestBox = document.getElementById("latestBox");
-
-  latestBox.style.display = "block";
-
-  latestBox.innerHTML = `
-    <div class="latest-title">오늘의 추천 번호</div>
-    <div class="balls" style="margin-top:10px;">
-      ${numbers.map(n => ballHtml(n)).join("")}
-    </div>
-  `;
+  renderNumberButtons();
+  renderSelectedNumbers();
 }
 
 function generateLotto(){
-  const result = document.getElementById("result");
-  const machine = document.getElementById("machine");
-  const gameCount = Number(document.getElementById("gameCount").value);
-  const mode = document.getElementById("mode").value;
 
-  result.innerHTML = "";
-  savedText = "";
+  const gameCount = Number(document.getElementById("gameCount").value);
+  const resultBox = document.getElementById("resultBox");
+  const machine = document.getElementById("machine");
+
+  resultBox.innerHTML = "";
   machine.classList.add("active");
 
-  if(lottoHistory.length === 0){
-    loadLottoData();
-  }
-
   setTimeout(() => {
+
     machine.classList.remove("active");
 
-    for(let i=1;i<=gameCount;i++){
-      const nums = pickNumbersByMode(mode);
+    let html = "";
 
-      if(i === 1){
-        renderTodayPick(nums);
+    for(let i = 1; i <= gameCount; i++){
+
+      let nums = [];
+
+      if(currentMode === "manual"){
+
+        if(selectedNumbers.length !== 6){
+          alert("수동 모드는 번호 6개를 모두 선택해야 합니다.");
+          return;
+        }
+
+        nums = [...selectedNumbers];
+
+      }else if(currentMode === "semi"){
+
+        if(fixedNumbers.length >= 6){
+          nums = [...fixedNumbers];
+        }else{
+          nums = makeSmartRandomNumbers(fixedNumbers);
+        }
+
+      }else{
+        nums = makeSmartRandomNumbers([]);
       }
 
-      savedText += `${i}게임: ${nums.join(", ")}\n`;
+      nums.sort((a,b)=>a-b);
 
-      const setDiv = document.createElement("div");
-      setDiv.className = "set";
-      setDiv.innerHTML = `
-        <div class="set-title">${i}게임</div>
-        <div class="balls">
-          ${nums.map(n => ballHtml(n)).join("")}
+      html += `
+        <div class="game">
+          <div class="game-title">${i}게임 추천번호</div>
+          <div>
+            ${nums.map(n => `<span class="ball">${n}</span>`).join("")}
+          </div>
         </div>
       `;
-
-      result.appendChild(setDiv);
     }
-  }, 1600);
+
+    resultBox.innerHTML = html;
+
+    if(currentMode !== "manual"){
+      selectedNumbers = [...fixedNumbers];
+      renderNumberButtons();
+      renderSelectedNumbers();
+    }
+
+  }, 1200);
 }
 
-function showStats(){
-  if(lottoHistory.length === 0) return;
+function makeSmartRandomNumbers(baseNumbers){
 
-  const stats = document.getElementById("stats");
-  const freq = makeFrequency();
+  let nums = [...baseNumbers];
 
-  const sorted = Object.keys(freq).map(n => ({
-    num:Number(n),
-    count:freq[n]
-  }));
+  let safety = 0;
 
-  const hot = [...sorted].sort((a,b)=>b.count-a.count).slice(0,6);
-  const cold = [...sorted].sort((a,b)=>a.count-b.count).slice(0,6);
+  while(nums.length < 6 && safety < 10000){
 
-  stats.style.display = "block";
-  stats.innerHTML =
-    "<b>통계 요약</b><br>" +
-    "많이 나온 번호: " +
-    hot.map(x => x.num + "번(" + x.count + "회)").join(", ") +
-    "<br>" +
-    "적게 나온 번호: " +
-    cold.map(x => x.num + "번(" + x.count + "회)").join(", ");
+    safety++;
+
+    const n = Math.floor(Math.random() * 45) + 1;
+
+    if(nums.includes(n)) continue;
+
+    const test = [...nums, n].sort((a,b)=>a-b);
+
+    if(nums.length === 5 && !isGoodCombination(test)) continue;
+
+    nums.push(n);
+  }
+
+  while(nums.length < 6){
+    const n = Math.floor(Math.random() * 45) + 1;
+    if(!nums.includes(n)) nums.push(n);
+  }
+
+  return nums.sort((a,b)=>a-b);
 }
 
-function copyNumbers(){
-  if(!savedText){
-    alert("먼저 번호를 추출하세요.");
+function isGoodCombination(nums){
+
+  if(nums.length < 6) return true;
+
+  const odd = nums.filter(n => n % 2 === 1).length;
+  const even = 6 - odd;
+
+  if(odd === 0 || even === 0) return false;
+  if(odd >= 5 || even >= 5) return false;
+
+  const sum = nums.reduce((a,b)=>a+b,0);
+
+  if(sum < 90 || sum > 190) return false;
+
+  let consecutive = 1;
+
+  for(let i = 1; i < nums.length; i++){
+    if(nums[i] === nums[i - 1] + 1){
+      consecutive++;
+      if(consecutive >= 3) return false;
+    }else{
+      consecutive = 1;
+    }
+  }
+
+  const lastDigitMap = {};
+
+  nums.forEach(n => {
+    const last = n % 10;
+    lastDigitMap[last] = (lastDigitMap[last] || 0) + 1;
+  });
+
+  if(Object.values(lastDigitMap).some(v => v >= 3)) return false;
+
+  return true;
+}
+
+function renderSelectedNumbers(){
+
+  const box = document.getElementById("selectedNumbers");
+  box.innerHTML = "";
+
+  if(selectedNumbers.length === 0){
+    box.innerHTML = `<span class="info">선택된 번호가 없습니다.</span>`;
     return;
   }
 
-  navigator.clipboard.writeText(savedText)
-    .then(() => alert("번호가 복사되었습니다."))
-    .catch(() => alert("복사에 실패했습니다."));
+  selectedNumbers.forEach(num => {
+    const span = document.createElement("span");
+    span.className = "ball";
+    span.textContent = num;
+    box.appendChild(span);
+  });
+}
+
+function resetLotto(){
+  selectedNumbers = [];
+  fixedNumbers = [];
+
+  renderNumberButtons();
+  renderSelectedNumbers();
+
+  document.getElementById("resultBox").innerHTML = "";
+  document.getElementById("machine").classList.remove("active");
 }
 
 if("serviceWorker" in navigator){
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./service-worker.js");
+    navigator.serviceWorker.register("service-worker.js")
+      .catch(err => console.log("Service Worker 등록 실패", err));
   });
 }
-
-loadLottoData();
 </script>
+
 </body>
 </html>
